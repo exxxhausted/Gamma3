@@ -1,0 +1,3 @@
+/home/exxxhausted/Projects/C++/Gamma3/build/Desktop-Debug/CMakeFiles/Gamma3.dir
+/home/exxxhausted/Projects/C++/Gamma3/build/Desktop-Debug/CMakeFiles/edit_cache.dir
+/home/exxxhausted/Projects/C++/Gamma3/build/Desktop-Debug/CMakeFiles/rebuild_cache.dir

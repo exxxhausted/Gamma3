@@ -1,0 +1,66 @@
+{
+    "Atoms" : {
+        "Na" : {
+            "Z" : 11,
+            "A" : 22.9
+        },
+
+        "I": {
+            "Z": 53,
+            "A": 126.9
+        },
+
+        "Cs-137" : {
+            "Z": 55,
+            "A": 136.9
+        }
+    },
+
+    "Molecules" : {
+        "NaI" : {
+            "composition": [
+                { "element": "Na", "count": 1 },
+                { "element": "I",  "count": 1 }
+            ]
+        },
+
+        "Cs-137" : {
+            "composition": [
+                { "element": "Cs-137", "count": 1 }
+            ]
+        }
+    },
+
+    "Materials" : {
+        "NaI" : {
+            "density": 3.67,
+            "composition": [
+                { "molecule": "NaI", "mass_fraction": 1.0 }
+            ]
+        },
+
+        "Cs-137" : {
+            "density": 3.67,
+            "composition": [
+                { "molecule": "Cs-137", "mass_fraction": 1.0 }
+            ]
+        }
+    },
+
+    "Formulas" : {
+        "SigmaPhoto" : {
+            "vars" : ["Z", "E"],
+            "formula" : "6.651e-25 * 4 * 2^(1/2) * Z^5 * (1/(137^4)) * (0.511/E)^(7/2)"
+        },
+
+        "SigmaCompton" : {
+            "vars" : ["Z", "E"],
+            "formula" : "6.651e-25 * (3.0 * Z) / (8.0 * (E / 0.511)) * ( (1.0 - 2.0 * ((E / 0.511) + 1.0) / pow((E / 0.511), 2.0)) * log(2.0 * (E / 0.511) + 1.0) + 0.5 + 4.0 / (E / 0.511) - 1.0 / (2.0 * pow(2.0 * (E / 0.511) + 1.0, 2.0)) )"
+        },
+
+        "SigmaPair" : {
+            "vars" : ["Z", "E"],
+            "formula" : "(E > 1.022) ? (2.5e-25 * (E - 1.022)) : (0.0)"
+        }
+    }
+}
