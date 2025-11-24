@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
                     else if (random_value < P_photo + P_compton) {
                         // Compton scattering
                         double alpha = ph.energy() / 0.511;
-                        auto old_dir = ph.ray().direction();
+                        auto old_dir = glm::normalize(ph.ray().direction());
                         auto new_dir = glm::normalize(geometry::Vector(dist(gen), dist(gen), dist(gen)));
                         double cos_theta = old_dir.x * new_dir.x + old_dir.y * new_dir.y + old_dir.z * new_dir.z;
                         double new_energy = ph.energy() / (1.0 + alpha * (1.0 - cos_theta));
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
                         photon_absorbed = true;
                     }
                 }
-                histohram.push_back(delta_E);
+                if(delta_E != 0) histohram.push_back(delta_E);
             }
         }
 
