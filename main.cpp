@@ -200,7 +200,7 @@ double compute_sigma_Molecule(double E_MeV,
                               etc::Function2<double>& f) {
     auto& composition = molecule.components();
     double sum = 0.0;
-    for(const auto& [atom, count] : composition) sum += compute_sigma_Atom(E_MeV, atom, f);
+    for(const auto& [atom, count] : composition) sum += count * compute_sigma_Atom(E_MeV, atom, f);
     return sum;
 }
 
