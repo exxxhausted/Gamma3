@@ -12,7 +12,6 @@ using namespace gamma3;
 #define RAY_COUNT 100000
 #define DISTANCE 100
 #define ENERGY_MEV 0.662
-#define EPSILON 1e-6
 
 physics::Photon spawn_photon_at_point(const geometry::Point& p, double E_MeV);
 geometry::Surface create_cube_detector_mm(double cube_size_mm = 100.0, const geometry::Point& center = geometry::Point(0, 0, 0));
@@ -66,7 +65,7 @@ int main(int argc, char** argv) {
             auto intersection = cube.intersect(ph.ray());
             if (intersection != std::nullopt) {
                 cnt++;
-                ph.move(intersection->t + EPSILON);
+                ph.move(intersection->t + 0.0000001);
 
                 bool photon_absorbed = false;
 
@@ -75,9 +74,9 @@ int main(int argc, char** argv) {
                 while (cube.contains(ph.ray().source()) && !photon_absorbed) {
                     auto gamma = dist(gen);
 
-                    double sigma_photo = compute_sigma_Material(ENERGY_MEV, NaI, sigma_photo_formula);
-                    double sigma_compton = compute_sigma_Material(ENERGY_MEV, NaI, sigma_compton_formula);
-                    double sigma_pair = compute_sigma_Material(ENERGY_MEV, NaI, sigma_pair_formula);
+                    double sigma_photo = compute_sigma_Material(ph.energy(), NaI, sigma_photo_formula);
+                    double sigma_compton = compute_sigma_Material(ph.energy(), NaI, sigma_compton_formula);
+                    double sigma_pair = compute_sigma_Material(ph.energy(), NaI, sigma_pair_formula);
                     double sigma = sigma_photo + sigma_compton + sigma_pair;
 
                     double lambda = -(1 / sigma) * log(gamma);
@@ -116,21 +115,22 @@ int main(int argc, char** argv) {
                         photon_absorbed = true;
                     }
                 }
-                if(delta_E != 0) histohram.push_back(delta_E);
+                if (delta_E != 0.0) histohram.push_back(delta_E);
             }
         }
 
         std::cout << "P_absorption: " << static_cast<double>(absorbed_photons) / cnt << std::endl;
 
-        std::cout << cnt << std::endl;
-        std::ofstream fout(output_path);
-        if (!fout) {
-            std::cerr << "Cannot open output file: " << output_path << std::endl;
-        } else {
-            for (double v : histohram) {
-                fout << v << "\n";
+        std::cout << "Intersection counter: " << cnt << std::endl;
+
+        {
+            std::ofstream fout(output_path);
+            if (!fout) {
+                std::cerr << "Cannot open output file: " << output_path << std::endl;
+            } else {
+                for (double v : histohram) fout << v << "\n";
+                std::cout << "Histogram saved to: " << output_path << std::endl;
             }
-            std::cout << "Histogram saved to: " << output_path << std::endl;
         }
 
         auto end = std::chrono::high_resolution_clock::now();
