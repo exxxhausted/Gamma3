@@ -26,25 +26,21 @@ public:
     void translate(const Vector& translation) {
         glm::dmat4 transform = glm::translate(glm::dmat4(1.0), translation);
         applyTransform(transform);
-        invalidateIntersector();
     }
 
     void rotate(double angle_rad, const Vector& axis) {
         glm::dmat4 transform = glm::rotate(glm::dmat4(1.0), angle_rad, glm::normalize(axis));
         applyTransform(transform);
-        invalidateIntersector();
     }
 
     void scale(double factor) {
         glm::dmat4 transform = glm::scale(glm::dmat4(1.0), glm::dvec3(factor));
         applyTransform(transform);
-        invalidateIntersector();
     }
 
     void scale(const glm::dvec3& factors) {
         glm::dmat4 transform = glm::scale(glm::dmat4(1.0), factors);
         applyTransform(transform);
-        invalidateIntersector();
     }
 
     // ==================== ЭКСПОРТ ====================
@@ -191,10 +187,8 @@ private:
             glm::dvec4 transformed = transform * glm::dvec4(vertex, 1.0);
             vertex = glm::dvec3(transformed);
         }
-    }
 
-    void invalidateIntersector() {
-        intersector_.reset();
+        intersector_ = std::make_shared<Intersector>(vertices_, faces_);
     }
 
     void ensureIntersector() {

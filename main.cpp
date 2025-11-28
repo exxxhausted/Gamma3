@@ -19,6 +19,7 @@ double compute_sigma_Atom(double E_MeV, const materials::Atom& atom, etc::Functi
 double compute_sigma_Molecule(double E_MeV, const materials::Molecule& molecule, etc::Function2<double>& f);
 double compute_sigma_Material(double E_MeV, const materials::Material& material, etc::Function2<double>& f);
 
+
 int main(int argc, char** argv) {
 
     //CLI INTERFACE
@@ -54,9 +55,12 @@ int main(int argc, char** argv) {
 
         auto cube = create_cube_detector_mm();
 
+        //cube.rotate(std::numbers::pi/4, geometry::Vector(0,0,1));
         auto gen = std::mt19937(std::random_device{}());
         auto dist = std::uniform_real_distribution<double>(0, 1);
         int cnt = 0;
+        int cnt_fully_absorbed = 0;
+        int cnt_partitialy_absorbed = 0;
         int absorbed_photons = 0;
         std::vector<double> histohram;
 
@@ -65,7 +69,7 @@ int main(int argc, char** argv) {
             auto intersection = cube.intersect(ph.ray());
             if (intersection != std::nullopt) {
                 cnt++;
-                ph.move(intersection->t + 0.0000001);
+                ph.move(intersection->t * 1.0000001);
 
                 bool photon_absorbed = false;
 
@@ -79,47 +83,91 @@ int main(int argc, char** argv) {
                     double sigma_pair = compute_sigma_Material(ph.energy(), NaI, sigma_pair_formula);
                     double sigma = sigma_photo + sigma_compton + sigma_pair;
 
+                    //std::cout << std::endl << "Photon number: " << i << ": " << std::endl;
+                    //std::cout << "E = " << ph.energy() << std::endl;
+
+                    //std::cout <<"Position1: (" << ph.ray().source().x << " " << ph.ray().source().y << " " << ph.ray().source().z << ")" << std::endl;
                     double lambda = -(1 / sigma) * log(gamma);
                     ph.move(lambda);
+                    //std::cout <<"Position2: (" << ph.ray().source().x << " " << ph.ray().source().y << " " << ph.ray().source().z << ")" << std::endl;
 
-                    if (!cube.contains(ph.ray().source())) break;
+                    if (!cube.contains(ph.ray().source())) {
+                        //std::cout << "OUT!" << std::endl;
+                        break;
+                    }
 
                     double P_photo = sigma_photo / sigma;
                     double P_compton = sigma_compton / sigma;
                     double P_pair = sigma_pair / sigma;
                     double random_value = dist(gen);
 
+                    //std::cout << "P_photo: " << P_photo << std::endl << "P_compton: " <<P_compton << std::endl << "P_pair: " << P_pair << std::endl;
+
+                    //std::cout << "Interaction type: ";
                     if (random_value < P_photo) {
                         // Photoabsorption
+
+                        //std::cout << "PHOTO" << std::endl;
+
                         delta_E += ph.energy();
+
                         absorbed_photons++;
                         photon_absorbed = true;
                     }
                     else if (random_value < P_photo + P_compton) {
                         // Compton scattering
-                        double alpha = ph.energy() / 0.511;
+
+                        //std::cout << "COMPTON" << std::endl;
+
                         auto old_dir = glm::normalize(ph.ray().direction());
-                        auto new_dir = glm::normalize(geometry::Vector(dist(gen), dist(gen), dist(gen)));
+
+                        double alpha = ph.energy() / 0.511;
+
+                        double theta = 2.0 * std::numbers::pi * dist(gen);
+                        double phi = std::acos(1.0 - 2.0 * dist(gen));
+
+                        geometry::Vector direction(
+                            std::sin(phi) * std::cos(theta),
+                            std::sin(phi) * std::sin(theta),
+                            std::cos(phi)
+                            );
+
+                        auto new_dir = glm::normalize(direction);
                         double cos_theta = old_dir.x * new_dir.x + old_dir.y * new_dir.y + old_dir.z * new_dir.z;
                         double new_energy = ph.energy() / (1.0 + alpha * (1.0 - cos_theta));
-                        double energy_loss = ph.energy() - new_energy;
 
+                        double energy_loss = ph.energy() - new_energy;
                         ph.setDirection(new_dir);
                         ph.setEnergy(new_energy);
                         delta_E += energy_loss;
                     }
                     else if (random_value < P_photo + P_compton + P_pair) {
                         // Pair production
+
+                        //std::cout << "PAIR" << std::endl;
+
                         delta_E += ph.energy();
+
                         absorbed_photons++;
                         photon_absorbed = true;
                     }
                 }
-                if (delta_E != 0.0) histohram.push_back(delta_E);
+                if (delta_E == ENERGY_MEV) cnt_fully_absorbed++;
+                else {
+                    cnt_partitialy_absorbed++;
+                }
+
+                if(delta_E != 0) histohram.push_back(delta_E);
             }
         }
 
+        std::cout << std::endl;
+
         std::cout << "P_absorption: " << static_cast<double>(absorbed_photons) / cnt << std::endl;
+
+        std::cout << "cnt_fully_absorbed = " << cnt_fully_absorbed << std::endl;
+
+        std::cout << "cnt_partitialy_absorbed = " << cnt_partitialy_absorbed << std::endl;
 
         std::cout << "Intersection counter: " << cnt << std::endl;
 
@@ -144,6 +192,8 @@ int main(int argc, char** argv) {
 }
 
 // HELPER FUNCTIONS
+
+
 
 physics::Photon spawn_photon_at_point(const geometry::Point& p, double E_MeV) {
     std::random_device rd;
