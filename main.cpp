@@ -9,8 +9,8 @@
 using namespace gamma3;
 
 #define N_A 6.02214076e23
-#define RAY_COUNT 100000
-#define DISTANCE 100
+#define RAY_COUNT 1000000
+#define DISTANCE 500
 #define ENERGY_MEV 0.662
 
 physics::Photon spawn_photon_at_point(const geometry::Point& p, double E_MeV);
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
 
                 double delta_E = 0.0;
 
-                while (cube.contains(ph.ray().source()) && !photon_absorbed) {
+                while (!photon_absorbed) {
                     auto gamma = dist(gen);
 
                     double sigma_photo = compute_sigma_Material(ph.energy(), NaI, sigma_photo_formula);
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
                     ph.move(lambda);
                     //std::cout <<"Position2: (" << ph.ray().source().x << " " << ph.ray().source().y << " " << ph.ray().source().z << ")" << std::endl;
 
-                    if (!cube.contains(ph.ray().source())) {
+                    if (cube.intersect(ph.ray())->t < lambda) {
                         //std::cout << "OUT!" << std::endl;
                         break;
                     }
@@ -160,6 +160,7 @@ int main(int argc, char** argv) {
                 if(delta_E != 0) histohram.push_back(delta_E);
             }
         }
+
 
         std::cout << std::endl;
 
